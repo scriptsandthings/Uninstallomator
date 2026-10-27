@@ -1,0 +1,30 @@
+anaconda)
+    app_name="Anaconda Navigator"
+    bundle_id="com.anaconda.io"
+    app_paths=(
+      "/Applications/Anaconda-Navigator.app"
+      "%USER_HOME%/Applications/Anaconda-Navigator.app"
+    )
+    blockingProcesses=(
+      "Anaconda-Navigator"
+    )
+    pkgs=(
+      "com.anaconda.pkg.prepare_installation"
+      "com.anaconda.pkg.shortcuts"
+      "com.anaconda.pkg.run_installation"
+      "com.anaconda.pkg.run_conda_init"
+      "com.anaconda.pkg.user_post_install"
+    )
+    files=(
+    )
+    user_files=(
+      "%USER_HOME%/Applications/Anaconda-Navigator.app"
+      "%USER_HOME%/.anaconda"
+      "%USER_HOME%/.continuum"
+      "%USER_HOME%/Library/Preferences/com.anaconda.io.plist"
+      "%USER_HOME%/Library/Caches/com.anaconda.io"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
