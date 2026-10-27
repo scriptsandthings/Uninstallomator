@@ -247,11 +247,45 @@ do_uninstall(){
   for p in "${agents[@]:-}";  do [[ -n "$p" ]] && unload_launch "$p"; done
   for p in "${daemons[@]:-}"; do [[ -n "$p" ]] && unload_launch "$p"; done
 
+  # app_paths may name a copy inside a home folder with %USER_HOME% (an app in ~/Applications,
+  # for example a Setapp install). Each such entry is expanded for every user home when
+  # USERSCOPE=1, or for the console user otherwise; with nobody logged in it is dropped.
+  # ap_homes and ap_uids hold the home and its owner for each expanded entry (empty otherwise),
+  # so that copy is removed as its owner through user_rm.
+  local -a ap_paths ap_homes ap_uids
+  local ap ap_home ap_cu i
+  for ap in "${app_paths[@]}"; do
+    [[ -z "$ap" ]] && continue
+    if [[ "$ap" != *%USER_HOME%* ]]; then
+      ap_paths+=( "$ap" ); ap_homes+=( "" ); ap_uids+=( "" )
+      continue
+    fi
+    if [[ "${USERSCOPE:-0}" -eq 1 ]]; then
+      while IFS= read -r ap_home; do
+        ap_paths+=( "$(expand_user_path "$ap" "$ap_home")" ); ap_homes+=( "$ap_home" )
+        ap_uids+=( "$(home_uid "$ap_home")" )
+      done < <(list_user_homes)
+    else
+      ap_cu="$(get_current_user)"
+      [[ "$ap_cu" == "loginwindow" || -z "$ap_cu" ]] && continue
+      ap_paths+=( "$(expand_user_path "$ap" "/Users/$ap_cu")" ); ap_homes+=( "/Users/$ap_cu" )
+      ap_uids+=( "$(id -u "$ap_cu" 2>/dev/null)" )
+    fi
+  done
+
   # remove app bundles and system files
   found=0
-  for p in "${app_paths[@]}"; do [[ -n "$p" && -e "$p" ]] && found=1; done
+  for p in "${ap_paths[@]}"; do [[ -n "$p" && -e "$p" ]] && found=1; done
   if (( found == 0 )); then cleanupAndExit 0 "$app_name not found in defined app paths" ERROR; fi
-  for p in "${app_paths[@]}"; do [[ -n "$p" ]] && confirm_rm "$p"; done
+  for (( i = 1; i <= ${#ap_paths[@]}; i++ )); do
+    p="${ap_paths[$i]}"
+    [[ -z "$p" ]] && continue
+    if [[ -n "${ap_homes[$i]}" && "$p" == "${ap_homes[$i]}"/* ]]; then
+      user_rm "${ap_uids[$i]}" "${ap_homes[$i]}" "$p"
+    else
+      confirm_rm "$p"
+    fi
+  done
   for p in "${files[@]:-}";   do [[ -n "$p" ]] && confirm_rm "$p"; done
 
   # per-user files
@@ -294,7 +328,7 @@ do_uninstall(){
 
   # success check: nothing blocking remains and app bundles are gone (best-effort)
   local any_left=0
-  for p in "${app_paths[@]}"; do [[ -e "$p" ]] && any_left=1; done
+  for p in "${ap_paths[@]}"; do [[ -e "$p" ]] && any_left=1; done
 
   if (( any_left == 0 )); then
     [[ "${NOTIFY:-silent}" == "success" || "${NOTIFY:-silent}" == "all" ]] \
