@@ -1,0 +1,20 @@
+obs)
+    app_name="OBS"
+    bundle_id="com.obsproject.obs-studio"
+    app_paths=(
+      "/Applications/OBS.app"
+    )
+    pkgs=()
+    files=(
+      "/Library/CoreMediaIO/Plug-Ins/DAL/obs-mac-virtualcam.plugin"
+    )
+    user_files=(
+      "%USER_HOME%/Library/Preferences/com.obsproject.obs-studio.plist"
+      "%USER_HOME%/Library/Caches/com.obsproject.obs-studio"
+      "%USER_HOME%/Library/HTTPStorages/com.obsproject.obs-studio"
+      "%USER_HOME%/Library/Saved Application State/com.obsproject.obs-studio.savedState"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
