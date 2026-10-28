@@ -1,0 +1,22 @@
+opera)
+    app_name="Opera"
+    bundle_id="com.operasoftware.Opera"
+    app_paths=(
+      "/Applications/Opera.app"
+    )
+    pkgs=()
+    files=()
+    user_files=(
+      "%USER_HOME%/Applications/Opera.app"
+      "%USER_HOME%/Library/Preferences/com.operasoftware.Opera.plist"
+      "%USER_HOME%/Library/Caches/com.operasoftware.Opera"
+      "%USER_HOME%/Library/Logs/com.operasoftware.Opera"
+      "%USER_HOME%/Library/HTTPStorages/com.operasoftware.Opera"
+      "%USER_HOME%/Library/Saved Application State/com.operasoftware.Opera.savedState"
+      "%USER_HOME%/Library/Caches/Opera"
+      "%USER_HOME%/Library/Logs/Opera"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
