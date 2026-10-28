@@ -28,15 +28,25 @@ label=${label:l}
 
 # MARK: Reading rest of the arguments
 argumentsArray=()
-while [[ -n $1 ]]; do
-    if [[ $1 =~ ".*\=.*" ]]; then
-        # if an argument contains an = character, send it to eval
-        printlog "setting variable from argument $1" INFO
-        argumentsArray+=( $1 )
-        eval $1
+# Every argument after the label is read. An empty one is skipped instead of ending the list:
+# Jamf always passes parameters 4 to 11, filled or not, so stopping at the first empty one meant
+# that a value in parameter 10 or 11 was ignored whenever an earlier slot was left blank.
+# Every parameter means the same thing in every slot. A hook command is only ever taken from an
+# argument that starts with PRE_REMOVE= or POST_REMOVE=; anything else with an = is an option, as
+# upstream reads it, so "DEBUG=0 NOTIFY=all" in parameter 10 still sets two options.
+for argument in "$@"; do
+    [[ -z "$argument" ]] && continue
+    # Hook options are stored as typed (setHookOption); eval would split and run them.
+    if [[ "$argument" == (PRE_REMOVE|POST_REMOVE|PRE_REMOVE_AS_USER|POST_REMOVE_AS_USER|PRE_REMOVE_REQUIRED|HOOK_TIMEOUT|HOOK_TEAM_ID)=* ]]; then
+        setHookOption "$argument"
+        continue
     fi
-    # shift to next argument
-    shift 1
+    if [[ $argument =~ ".*\=.*" ]]; then
+        # if an argument contains an = character, send it to eval
+        printlog "setting variable from argument $argument" INFO
+        argumentsArray+=( $argument )
+        eval $argument
+    fi
 done
 printlog "Total items in argumentsArray: ${#argumentsArray[@]}" INFO
 printlog "argumentsArray: ${argumentsArray[*]}" INFO
@@ -44,11 +54,12 @@ printlog "argumentsArray: ${argumentsArray[*]}" INFO
 # MARK: Logging
 log_location="/private/var/log/Uninstallomator.log"
 
-# Check if we're in debug mode, if so then set logging to DEBUG, otherwise default to INFO
+# Check if we're in debug mode, if so then set logging to DEBUG, otherwise keep a LOGGING given as
+# an argument (LOGGING=DEBUG shows hook commands and their output on a real run), default INFO
 if [[ $DEBUG -ne 0 ]]; then
     LOGGING="DEBUG"
 else
-    LOGGING="INFO"
+    LOGGING="${LOGGING:-INFO}"
 fi
 
 # Associate logging levels with a numerical value so that we are able to identify what
