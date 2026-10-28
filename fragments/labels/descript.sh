@@ -1,0 +1,22 @@
+descript)
+    app_name="Descript"
+    bundle_id="com.descript.beachcube"
+    app_paths=(
+      "/Applications/Descript.app"
+    )
+    pkgs=()
+    files=(
+      "/Library/Audio/Plug-Ins/HAL/DescriptLoopbackAudio.driver"
+    )
+    user_files=(
+      "%USER_HOME%/Applications/Descript.app"
+      "%USER_HOME%/Library/Application Support/Descript"
+      "%USER_HOME%/Library/Preferences/com.descript.beachcube.plist"
+      "%USER_HOME%/Library/Caches/com.descript.beachcube"
+      "%USER_HOME%/Library/Caches/com.descript.beachcube.ShipIt"
+      "%USER_HOME%/Library/Logs/Descript"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
