@@ -1,0 +1,19 @@
+amphetamine)
+    app_name="Amphetamine"
+    bundle_id="com.if.Amphetamine"
+    app_paths=(
+      "/Applications/Amphetamine.app"
+    )
+    pkgs=(
+      "com.if.Amphetamine"
+    )
+    files=()
+    user_files=(
+      "%USER_HOME%/Library/Containers/com.if.Amphetamine"
+      "%USER_HOME%/Library/Application Scripts/com.if.Amphetamine"
+      "%USER_HOME%/Library/Preferences/com.if.Amphetamine.plist"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
