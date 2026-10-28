@@ -1,0 +1,20 @@
+stattransfer)
+    app_name="StatTransfer"
+    bundle_id="com.circlesys.stattransfer"
+    app_paths=(
+      "/Applications/StatTransfer17"
+    )
+    pkgs=(
+      "stattransfer17"
+    )
+    files=()
+    user_files=(
+      "%USER_HOME%/Library/Preferences/com.circlesys.stattransfer.plist"
+      "%USER_HOME%/Library/Caches/com.circlesys.stattransfer"
+      "%USER_HOME%/Library/HTTPStorages/com.circlesys.stattransfer"
+      "%USER_HOME%/Library/Saved Application State/com.circlesys.stattransfer.savedState"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
