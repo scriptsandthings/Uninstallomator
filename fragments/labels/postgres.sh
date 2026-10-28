@@ -1,0 +1,20 @@
+postgres)
+    app_name="Postgres"
+    bundle_id="com.postgresapp.Postgres2"
+    app_paths=(
+      "/Applications/Postgres.app"
+    )
+    pkgs=()
+    files=()
+    user_files=(
+      "%USER_HOME%/Library/Preferences/com.postgresapp.Postgres2.plist"
+      "%USER_HOME%/Library/Preferences/com.postgresapp.Postgres2LoginHelper.plist"
+      "%USER_HOME%/Library/Preferences/com.postgresapp.Postgres2MenuHelper.plist"
+      "%USER_HOME%/Library/Caches/com.postgresapp.Postgres2"
+      "%USER_HOME%/Library/HTTPStorages/com.postgresapp.Postgres2"
+      "%USER_HOME%/Library/Saved Application State/com.postgresapp.Postgres2.savedState"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
