@@ -1,0 +1,19 @@
+bear)
+    app_name="Bear"
+    bundle_id="net.shinyfrog.bear"
+    app_paths=(
+      "/Applications/Bear.app"
+    )
+    pkgs=()
+    files=()
+    user_files=(
+      "%USER_HOME%/Library/Preferences/net.shinyfrog.bear.plist"
+      "%USER_HOME%/Library/Caches/net.shinyfrog.bear"
+      "%USER_HOME%/Library/HTTPStorages/net.shinyfrog.bear"
+      "%USER_HOME%/Library/Saved Application State/net.shinyfrog.bear.savedState"
+      "%USER_HOME%/Library/Logs/Bear"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
