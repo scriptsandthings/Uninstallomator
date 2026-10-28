@@ -1,0 +1,31 @@
+wireshark)
+    app_name="Wireshark"
+    bundle_id="org.wireshark.Wireshark"
+    app_paths=(
+      "/Applications/Wireshark.app"
+    )
+    pkgs=(
+      "org.wireshark.ChmodBPF.pkg"
+      "org.wireshark.path_helper.pkg"
+      "org.wireshark.uninstall.ChmodBPF.pkg"
+    )
+    files=(
+      "/Library/Application Support/Wireshark"
+      "/private/etc/paths.d/Wireshark"
+      "/private/etc/manpaths.d/Wireshark"
+    )
+    user_files=(
+      "%USER_HOME%/.config/wireshark"
+      "%USER_HOME%/Library/Preferences/org.wireshark.Wireshark.plist"
+      "%USER_HOME%/Library/Caches/org.wireshark.Wireshark"
+      "%USER_HOME%/Library/Cookies/org.wireshark.Wireshark.binarycookies"
+      "%USER_HOME%/Library/HTTPStorages/org.wireshark.Wireshark"
+      "%USER_HOME%/Library/Saved Application State/org.wireshark.Wireshark.savedState"
+      "%USER_HOME%/Library/WebKit/org.wireshark.Wireshark"
+    )
+    agents=()
+    daemons=(
+      "/Library/LaunchDaemons/org.wireshark.ChmodBPF.plist"
+    )
+    profiles=()
+;;
