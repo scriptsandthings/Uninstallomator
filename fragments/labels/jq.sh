@@ -1,0 +1,31 @@
+jq)
+    # The AutoPkg build installs one file, /usr/local/bin/jq, and registers a receipt whose id carries
+    # the jq version, so the ids below are the releases the build could have shipped.
+    app_name="jq"
+    bundle_id="org.jqlang.jq"
+    app_paths=(
+      "/usr/local/bin/jq"
+    )
+    pkgs=(
+      "org.jqlang.jq.universal.1.7"
+      "org.jqlang.jq.universal.1.7.1"
+      "org.jqlang.jq.universal.1.8.0"
+      "org.jqlang.jq.universal.1.8.1"
+      "org.jqlang.jq.universal.1.8.2"
+      "org.jqlang.jq.arm64.1.7"
+      "org.jqlang.jq.arm64.1.7.1"
+      "org.jqlang.jq.arm64.1.8.0"
+      "org.jqlang.jq.arm64.1.8.1"
+      "org.jqlang.jq.arm64.1.8.2"
+      "org.jqlang.jq.x8664.1.7"
+      "org.jqlang.jq.x8664.1.7.1"
+      "org.jqlang.jq.x8664.1.8.0"
+      "org.jqlang.jq.x8664.1.8.1"
+      "org.jqlang.jq.x8664.1.8.2"
+    )
+    files=()
+    user_files=()
+    agents=()
+    daemons=()
+    profiles=()
+;;
