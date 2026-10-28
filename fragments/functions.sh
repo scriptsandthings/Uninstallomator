@@ -124,10 +124,39 @@ forget_pkg(){
 }
 
 # --- Userscope helpers ---
+# list_user_homes: prints "UID HOME" for each account with a uid of 500 or more and a home folder
+# in /Users. Reads whole records, so the order dscl prints the two keys in does not matter.
 list_user_homes(){
   dscl . -readall /Users NFSHomeDirectory UniqueID 2>/dev/null \
-  | awk '/^NFSHomeDirectory:/{h=$2} /^UniqueID:/{uid=$2; if (uid>=500) print h}' \
-  | sort -u | grep -E '^/Users/[^/]+' | grep -vE '^/Users/(Shared|Guest)$'
+  | awk '
+      function out() { if (h != "" && u != "" && u >= 500) print u " " h; h = ""; u = "" }
+      /^-$/ { out(); next }
+      /^NFSHomeDirectory:/ { h = $2 }
+      /^UniqueID:/ { u = $2 }
+      END { out() }' \
+  | sort -u | grep -E '^[0-9]+ /Users/[^/]+' | grep -vE '^[0-9]+ /Users/(Shared|Guest)$'
+}
+# console_user_home: prints "UID HOME" for the console user, with HOME read from the account record
+# rather than assumed to be /Users/NAME, or nothing when nobody is logged in.
+console_user_home(){
+  local cu uid home
+  cu="$(get_current_user)"
+  [[ -z "$cu" || "$cu" == "loginwindow" ]] && return 0
+  uid="$(id -u "$cu" 2>/dev/null)"
+  home="$(dscl /Search -read "/Users/$cu" NFSHomeDirectory 2>/dev/null | awk '/^NFSHomeDirectory:/ { print $2; exit }')"
+  [[ -n "$uid" && -n "$home" ]] && print -r -- "$uid $home"
+}
+# user_path_template PATH: prints PATH with a leading ~/ written as %USER_HOME%/, so it is removed
+# from the user's home as its owner. A label that leaves ~ unquoted gets it expanded to root's
+# home ($HOME) when the label is read, so a leading $HOME/ is treated the same way.
+user_path_template(){
+  local p="$1"
+  if [[ "$p" == \~/* ]]; then
+    p="%USER_HOME%/${p:2}"
+  elif [[ -n "$HOME" && "$HOME" != / && "$p" == "$HOME"/* ]]; then
+    p="%USER_HOME%/${p#"$HOME"/}"
+  fi
+  printf '%s' "$p"
 }
 expand_user_path(){
   local tpl="$1" home="$2"
@@ -144,19 +173,8 @@ killTree(){
   kill -"$1" "$2" 2>/dev/null || true
 }
 
-# home_uid HOME: prints the UniqueID of the account whose NFSHomeDirectory is HOME, or nothing.
-# Reads whole records, so the order dscl prints the two keys in does not matter.
-home_uid(){
-  dscl . -readall /Users NFSHomeDirectory UniqueID 2>/dev/null \
-  | awk -v want="$1" '
-      /^-$/ { if (h == want && u != "") { print u; exit } h = ""; u = ""; next }
-      /^NFSHomeDirectory:/ { h = $2 }
-      /^UniqueID:/ { u = $2 }
-      END { if (h == want && u != "") print u }' | head -n 1
-}
-
-# user_rm UID HOME PATH
-# Removes PATH, a per-user file inside the home folder HOME of the account with uid UID. This
+# user_rm UID HOME PATH...
+# Removes each PATH, a per-user file inside the home folder HOME of the account with uid UID. This
 # script runs as root, and the user owns the folders in their home, so the user can replace a
 # folder on the way (for example ~/Library/Application Support/App) with a link to a system
 # folder; a plain rm -rf as root would then delete what sits behind the link. So before anything
@@ -165,49 +183,57 @@ home_uid(){
 #   - PATH must be written inside HOME, with no "." or ".." in it;
 #   - no folder between HOME and PATH may be a link;
 #   - the folder holding PATH, with links resolved, must still be inside HOME.
-# The rm then runs as the owner of HOME, so a folder swapped after these checks can only lead to
-# files that user could delete anyway. A file in the home that the user cannot delete (owned by
-# root, for example) is left in place and logged. PATH itself may be a link: rm removes the link,
-# not what it points to.
+# A PATH that fails a check is skipped and logged. The rest are removed by one rm, run as the
+# owner of HOME with the paths passed as its arguments, so a folder swapped after these checks
+# can only lead to files that user could delete anyway. A file in the home that the user cannot
+# delete (owned by root, for example) is left in place and logged. PATH itself may be a link: rm
+# removes the link, not what it points to.
 # The rm runs in the background with no input and is stopped after USER_RM_TIMEOUT seconds (60),
 # so a hung network home or a stuck file system cannot hold up the policy.
 user_rm(){
-  local uid="$1" home="${2%/}" t="$3" rhome rparent owner ouid part p rest pid t0
+  local uid="$1" home="${2%/}" t rhome rparent owner ouid part p rest link pid t0
+  local -a ok
+  shift 2
   local limit="${USER_RM_TIMEOUT:-60}"
   [[ "$limit" == <-> && "$limit" -gt 0 ]] || limit=60
-  [[ -e "$t" || -L "$t" ]] || return 0
   ouid="$(stat -f %u "$home" 2>/dev/null)"
   owner="$(stat -f %Su "$home" 2>/dev/null)"
-  if [[ -z "$uid" || -z "$ouid" || -z "$owner" || "$ouid" != "$uid" || "$ouid" == 0 ]]; then
-    printlog "skipped, home not owned by its user: $t ($home belongs to uid ${ouid:-unknown}, account uid ${uid:-unknown})" WARN
-    return 0
-  fi
-  if [[ "$t" != "$home"/?* || "$t/" == */./* || "$t/" == */../* ]]; then
-    printlog "skipped, path leaves the home folder: $t" WARN
-    return 0
-  fi
-  rest="${${t:h}#$home}"
-  p="$home"
-  for part in "${(@s:/:)rest}"; do
-    [[ -z "$part" ]] && continue
-    p="$p/$part"
-    if [[ -L "$p" ]]; then
-      printlog "skipped, path leaves the home folder: $t ($p is a link)" WARN
-      return 0
-    fi
-  done
   rhome="$(cd -P -- "$home" 2>/dev/null && pwd -P)"
-  rparent="$(cd -P -- "${t:h}" 2>/dev/null && pwd -P)"
-  if [[ -z "$rhome" || -z "$rparent" ]] || [[ "$rparent" != "$rhome" && "$rparent" != "$rhome"/* ]]; then
-    printlog "skipped, path leaves the home folder: $t (its folder is ${rparent:-unreadable})" WARN
-    return 0
-  fi
-  if [[ "${DEBUG:-0}" -eq 1 ]]; then
-    printlog "[DEBUG] would remove as $owner: $t" DEBUG
-    return 0
-  fi
-  printlog "Removing as $owner: $t" INFO
-  /usr/bin/sudo -n -u "#$uid" /bin/rm -rf -- "$t" </dev/null &
+  for t in "$@"; do
+    [[ -e "$t" || -L "$t" ]] || continue
+    if [[ -z "$uid" || -z "$ouid" || -z "$owner" || "$ouid" != "$uid" || "$ouid" == 0 ]]; then
+      printlog "skipped, home not owned by its user: $t ($home belongs to uid ${ouid:-unknown}, account uid ${uid:-unknown})" WARN
+      continue
+    fi
+    if [[ "$t" != "$home"/?* || "$t/" == */./* || "$t/" == */../* ]]; then
+      printlog "skipped, path leaves the home folder: $t" WARN
+      continue
+    fi
+    rest="${${t:h}#$home}"
+    p="$home"; link=""
+    for part in "${(@s:/:)rest}"; do
+      [[ -z "$part" ]] && continue
+      p="$p/$part"
+      [[ -L "$p" ]] && { link="$p"; break; }
+    done
+    if [[ -n "$link" ]]; then
+      printlog "skipped, path leaves the home folder: $t ($p is a link)" WARN
+      continue
+    fi
+    rparent="$(cd -P -- "${t:h}" 2>/dev/null && pwd -P)"
+    if [[ -z "$rhome" || -z "$rparent" ]] || [[ "$rparent" != "$rhome" && "$rparent" != "$rhome"/* ]]; then
+      printlog "skipped, path leaves the home folder: $t (its folder is ${rparent:-unreadable})" WARN
+      continue
+    fi
+    if [[ "${DEBUG:-0}" -eq 1 ]]; then
+      printlog "[DEBUG] would remove as $owner: $t" DEBUG
+      continue
+    fi
+    printlog "Removing as $owner: $t" INFO
+    ok+=( "$t" )
+  done
+  (( ${#ok[@]} == 0 )) && return 0
+  /usr/bin/sudo -n -u "#$uid" /bin/rm -rf -- "${ok[@]}" </dev/null &
   pid=$!
   t0=$SECONDS
   while kill -0 "$pid" 2>/dev/null; do
@@ -216,15 +242,17 @@ user_rm(){
       sleep 2
       killTree KILL "$pid"
       wait "$pid" 2>/dev/null
-      printlog "timed out, left in place: $t (rm as $owner still running after ${limit}s, stopped)" WARN
-      return 0
+      printlog "timed out, rm as $owner in $home still running after ${limit}s, stopped" WARN
+      break
     fi
-    sleep 0.2
+    sleep 0.1
   done
   wait "$pid" 2>/dev/null
-  if [[ -e "$t" || -L "$t" ]]; then
-    printlog "$owner cannot remove all of $t (owned by another user, or locked); left in place" WARN
-  fi
+  for t in "${ok[@]}"; do
+    if [[ -e "$t" || -L "$t" ]]; then
+      printlog "$owner cannot remove all of $t (owned by another user, locked, or timed out); left in place" WARN
+    fi
+  done
 }
 
 # --- Uninstall engine (runs after label case sets arrays) ---
@@ -252,75 +280,61 @@ do_uninstall(){
   # USERSCOPE=1, or for the console user otherwise; with nobody logged in it is dropped.
   # ap_homes and ap_uids hold the home and its owner for each expanded entry (empty otherwise),
   # so that copy is removed as its owner through user_rm.
-  local -a ap_paths ap_homes ap_uids
-  local ap ap_home ap_cu i
+  # The user homes and their owners are read once, here, for every per-user entry.
+  local -a ap_paths ap_homes ap_uids uh_homes uh_uids
+  local ap ap_home ap_cu i k
+  while read -r ap_cu ap_home; do
+    uh_uids+=( "$ap_cu" ); uh_homes+=( "$ap_home" )
+  done < <(if [[ "${USERSCOPE:-0}" -eq 1 ]]; then list_user_homes; else console_user_home; fi)
   for ap in "${app_paths[@]}"; do
     [[ -z "$ap" ]] && continue
+    ap="$(user_path_template "$ap")"
     if [[ "$ap" != *%USER_HOME%* ]]; then
       ap_paths+=( "$ap" ); ap_homes+=( "" ); ap_uids+=( "" )
       continue
     fi
-    if [[ "${USERSCOPE:-0}" -eq 1 ]]; then
-      while IFS= read -r ap_home; do
-        ap_paths+=( "$(expand_user_path "$ap" "$ap_home")" ); ap_homes+=( "$ap_home" )
-        ap_uids+=( "$(home_uid "$ap_home")" )
-      done < <(list_user_homes)
-    else
-      ap_cu="$(get_current_user)"
-      [[ "$ap_cu" == "loginwindow" || -z "$ap_cu" ]] && continue
-      ap_paths+=( "$(expand_user_path "$ap" "/Users/$ap_cu")" ); ap_homes+=( "/Users/$ap_cu" )
-      ap_uids+=( "$(id -u "$ap_cu" 2>/dev/null)" )
-    fi
+    for (( k = 1; k <= ${#uh_homes[@]}; k++ )); do
+      ap_paths+=( "$(expand_user_path "$ap" "${uh_homes[$k]}")" ); ap_homes+=( "${uh_homes[$k]}" )
+      ap_uids+=( "${uh_uids[$k]}" )
+    done
   done
 
   # remove app bundles and system files
   found=0
   for p in "${ap_paths[@]}"; do [[ -n "$p" && -e "$p" ]] && found=1; done
   if (( found == 0 )); then cleanupAndExit 0 "$app_name not found in defined app paths" ERROR; fi
+  # The copies in a home folder are removed together, as its owner, by one user_rm per home.
+  local -a batch
   for (( i = 1; i <= ${#ap_paths[@]}; i++ )); do
     p="${ap_paths[$i]}"
     [[ -z "$p" ]] && continue
-    if [[ -n "${ap_homes[$i]}" && "$p" == "${ap_homes[$i]}"/* ]]; then
-      user_rm "${ap_uids[$i]}" "${ap_homes[$i]}" "$p"
-    else
-      confirm_rm "$p"
-    fi
+    [[ -n "${ap_homes[$i]}" && "$p" == "${ap_homes[$i]}"/* ]] || confirm_rm "$p"
+  done
+  for (( k = 1; k <= ${#uh_homes[@]}; k++ )); do
+    batch=()
+    for (( i = 1; i <= ${#ap_paths[@]}; i++ )); do
+      [[ "${ap_homes[$i]}" == "${uh_homes[$k]}" && "${ap_paths[$i]}" == "${uh_homes[$k]}"/* ]] && batch+=( "${ap_paths[$i]}" )
+    done
+    (( ${#batch[@]} )) && user_rm "${uh_uids[$k]}" "${uh_homes[$k]}" "${batch[@]}"
   done
   for p in "${files[@]:-}";   do [[ -n "$p" ]] && confirm_rm "$p"; done
 
-  # per-user files
-  if [[ "${USERSCOPE:-0}" -eq 1 ]]; then
-    local uh tgt uhuid
-    while IFS= read -r uh; do
-      uhuid="$(home_uid "$uh")"
-      for p in "${user_files[@]:-}"; do
-        [[ -z "$p" ]] && continue
-        tgt="$(expand_user_path "$p" "$uh")"
-        # A path in the home folder is removed as its owner, after the checks in user_rm.
-        if [[ "$tgt" == "$uh"/* ]]; then user_rm "$uhuid" "$uh" "$tgt"; elif [[ -n "$tgt" ]]; then confirm_rm "$tgt"; fi
-      done
-    done < <(list_user_homes)
-  else
-    local cu_name; cu_name="$(get_current_user)"
-   if [[ "$cu_name" == "loginwindow" || -z "$cu_name" ]]; then
-     printlog "No user session; skipping per-user file removals (USERSCOPE=0)" INFO
-   else
-     local cu_home="/Users/$cu_name" tgt
-     local cu_uid; cu_uid="$(id -u "$cu_name" 2>/dev/null)"
-    for p in "${user_files[@]:-}"; do
-      [[ -z "$p" ]] && continue
-      if [[ "$p" == %USER_HOME%* ]]; then
-        tgt="$(expand_user_path "$p" "$cu_home")"
-      elif [[ "$p" == ~/* ]]; then
-        tgt="${p/#~\//$cu_home/}"
-      else
-        tgt="$p"
-      fi
-      # A path in the home folder is removed as its owner, after the checks in user_rm.
-      if [[ "$tgt" == "$cu_home"/* ]]; then user_rm "$cu_uid" "$cu_home" "$tgt"; elif [[ -n "$tgt" ]]; then confirm_rm "$tgt"; fi
-    done
-   fi
+  # per-user files, for every user home when USERSCOPE=1, or for the console user otherwise
+  if [[ "${USERSCOPE:-0}" -ne 1 ]] && (( ${#uh_homes[@]} == 0 )); then
+    printlog "No user session (or no home found for it); skipping per-user file removals (USERSCOPE=0)" INFO
   fi
+  local -a uf_tpls
+  local uh tgt uhuid
+  for p in "${user_files[@]:-}"; do [[ -n "$p" ]] && uf_tpls+=( "$(user_path_template "$p")" ); done
+  for (( k = 1; k <= ${#uh_homes[@]}; k++ )); do
+    uh="${uh_homes[$k]}"; uhuid="${uh_uids[$k]}"; batch=()
+    for p in "${uf_tpls[@]}"; do
+      tgt="$(expand_user_path "$p" "$uh")"
+      # A path in the home folder is removed as its owner, after the checks in user_rm.
+      if [[ "$tgt" == "$uh"/* ]]; then batch+=( "$tgt" ); elif [[ -n "$tgt" ]]; then confirm_rm "$tgt"; fi
+    done
+    (( ${#batch[@]} )) && user_rm "$uhuid" "$uh" "${batch[@]}"
+  done
 
   # receipts
   local id
