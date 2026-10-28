@@ -64,22 +64,47 @@ displaynotification(){ # $1 msg, $2 title
 }
 
 # --- Blocking processes (simple kill policy; extend later if needed) ---
+# blockingProcessList: prints "PID PATH" for every running process that blocks removal: one whose
+# executable is named exactly as an entry in blockingProcesses, or one running from inside any of
+# app_paths (helpers and login items included, whatever their name).
+# ps -o comm= prints the full executable path. pgrep -x and pkill take the name as a regular
+# expression, so "Self Service+" matched Jamf's older "Self Service" and pkill quit that app too.
+blockingProcessList() {
+  local pid exe x p
+  ps -axo pid=,comm= | while read -r pid exe; do
+    for x in "${blockingProcesses[@]}"; do
+      [[ "$x" == "NONE" || -z "$x" ]] && continue
+      [[ "${exe:t}" == "$x" ]] && { print -r -- "$pid $exe"; continue 2; }
+    done
+    for p in "${app_paths[@]}"; do
+      [[ -n "$p" && "$exe" == "$p"/* ]] && { print -r -- "$pid $exe"; continue 2; }
+    done
+  done
+}
+
 checkRunningProcesses() {
   # DEBUG==1 → skip enforcement
   [[ "${DEBUG:-0}" -eq 1 ]] && { printlog "DEBUG mode: skipping blocking process checks" DEBUG; return; }
-  local counted=0 x
+  local -a found
+  local line
   for _ in {1..4}; do
-    for x in "${blockingProcesses[@]}"; do
-      [[ "$x" == "NONE" || -z "$x" ]] && continue
-      if pgrep -xq "$x"; then
-        printlog "Found blocking process: $x" INFO
-        pkill "$x" || true
-        sleep 5
-        ((counted++))
-      fi
+    found=( "${(@f)$(blockingProcessList)}" )
+    found=( ${found:#} )
+    (( ${#found} == 0 )) && break
+    for line in "${found[@]}"; do
+      printlog "Found blocking process: ${line#* }" INFO
+      # Signal by PID: only the processes found above, never every process sharing part of a name.
+      kill "${line%% *}" 2>/dev/null || true
     done
+    sleep 5
   done
-  if (( counted > 0 )) && pgrep -fq "${bundle_id:-__nope__}"; then
+  # Abort if anything that blocks removal is still running, matched the same way: by full name or
+  # by running from inside the app. Searching every command line for the bundle id also matched
+  # unrelated processes (for example com.microsoft.teams inside com.microsoft.teams2.agent).
+  found=( "${(@f)$(blockingProcessList)}" )
+  found=( ${found:#} )
+  if (( ${#found} > 0 )); then
+    printlog "Still running: ${found[*]#* }" ERROR
     cleanupAndExit 11 "Could not quit all processes for $app_name; aborting." ERROR
   fi
   printlog "No blocking processes remain" INFO
