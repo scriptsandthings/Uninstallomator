@@ -1,0 +1,19 @@
+atlasti)
+    app_name="ATLAS.ti"
+    bundle_id="com.atlasti.ATLAS-ti"
+    app_paths=(
+      "/Applications/ATLAS.ti.app"
+    )
+    pkgs=()
+    files=()
+    user_files=(
+      "%USER_HOME%/Library/Preferences/com.atlasti.ATLAS-ti.plist"
+      "%USER_HOME%/Library/Caches/com.atlasti.ATLAS-ti"
+      "%USER_HOME%/Library/HTTPStorages/com.atlasti.ATLAS-ti"
+      "%USER_HOME%/Library/Saved Application State/com.atlasti.ATLAS-ti.savedState"
+      "%USER_HOME%/Library/Logs/ATLAS.ti"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
