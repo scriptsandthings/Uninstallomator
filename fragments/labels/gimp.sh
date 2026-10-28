@@ -1,0 +1,17 @@
+gimp)
+    app_name="GIMP"
+    bundle_id="org.gimp.gimp"
+    app_paths=(
+      "/Applications/GIMP.app"
+    )
+    pkgs=()
+    files=()
+    user_files=(
+      "%USER_HOME%/Library/Preferences/org.gimp.gimp.plist"
+      "%USER_HOME%/Library/Caches/org.gimp.gimp"
+      "%USER_HOME%/Library/Logs/GIMP"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
