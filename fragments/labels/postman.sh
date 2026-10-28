@@ -4,19 +4,14 @@ postman)
     app_paths=(
       "/Applications/Postman.app"
     )
-    pkgs=(
-      "com.jamf.appinstallers.Postman"
-    )
+    pkgs=()
     files=()
     user_files=(
-      "%USER_HOME%/Library/Application Support/Postman"
       "%USER_HOME%/Library/Preferences/com.postmanlabs.mac.plist"
       "%USER_HOME%/Library/Caches/com.postmanlabs.mac"
       "%USER_HOME%/Library/Logs/Postman"
     )
     agents=()
-    daemons=(
-      "/Library/LaunchDaemons/com.reincubate.macos.cam.PrivilegedHelper.plist"
-    )
+    daemons=()
     profiles=()
 ;;
