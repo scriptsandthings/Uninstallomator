@@ -1,0 +1,19 @@
+transmit5)
+    app_name="Transmit"
+    bundle_id="com.panic.Transmit"
+    app_paths=(
+      "/Applications/Transmit.app"
+    )
+    pkgs=()
+    files=()
+    user_files=(
+      "%USER_HOME%/Library/Logs/Transmit"
+      "%USER_HOME%/Library/Preferences/com.panic.Transmit.plist"
+      "%USER_HOME%/Library/Caches/com.panic.Transmit"
+      "%USER_HOME%/Library/HTTPStorages/com.panic.Transmit"
+      "%USER_HOME%/Library/Saved Application State/com.panic.Transmit.savedState"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
