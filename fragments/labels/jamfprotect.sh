@@ -1,0 +1,27 @@
+jamfprotect)
+    app_name="JamfProtect"
+    bundle_id="com.jamf.protect.daemon"
+    app_paths=(
+      "/Applications/JamfProtect.app"
+    )
+    pkgs=(
+      "com.jamf.protect.pkg"
+    )
+    files=(
+      "/Library/Application Support/JamfProtect"
+      "/Library/Logs/JamfProtect"
+      "/usr/local/bin/protectctl"
+    )
+    user_files=(
+      "%USER_HOME%/Library/Preferences/com.jamf.protect.plist"
+    )
+    agents=(
+      "/Library/LaunchAgents/com.jamf.protect.agent.plist"
+    )
+    daemons=(
+      "/Library/LaunchDaemons/com.jamf.protect.verify.plist"
+      "/Library/LaunchDaemons/com.jamf.protect.daemon.plist"
+      "/Library/LaunchDaemons/com.jamf.protect.daemon.reinstaller.plist"
+    )
+    profiles=()
+;;
