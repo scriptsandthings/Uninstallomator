@@ -1,0 +1,17 @@
+zen)
+    app_name="Zen"
+    bundle_id="app.zen-browser.zen"
+    app_paths=(
+      "/Applications/Zen.app"
+    )
+    pkgs=()
+    files=()
+    user_files=(
+      "%USER_HOME%/Library/Preferences/app.zen-browser.zen.plist"
+      "%USER_HOME%/Library/Caches/app.zen-browser.zen"
+      "%USER_HOME%/Library/Logs/Zen"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
