@@ -1,0 +1,25 @@
+microsoftpowershell)
+    app_name="PowerShell"
+    bundle_id="com.microsoft.powershell"
+    app_paths=(
+      "/Applications/PowerShell.app"
+    )
+    pkgs=(
+      "com.microsoft.powershell"
+    )
+    files=(
+      "/usr/local/microsoft/powershell"
+      "/usr/local/bin/pwsh"
+    )
+    user_files=(
+      "%USER_HOME%/Library/Application Support/PowerShell"
+      "%USER_HOME%/Library/Preferences/com.microsoft.powershell.plist"
+      "%USER_HOME%/Library/Caches/com.microsoft.powershell"
+      "%USER_HOME%/.config/powershell"
+      "%USER_HOME%/.local/share/powershell"
+      "%USER_HOME%/.cache/powershell"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
