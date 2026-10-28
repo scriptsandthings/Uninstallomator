@@ -1,0 +1,23 @@
+depnotify)
+    app_name="DEPNotify"
+    bundle_id="menu.nomad.DEPNotify"
+    app_paths=(
+      "/Applications/Utilities/DEPNotify.app"
+    )
+    pkgs=(
+      "menu.nomad.depnotify"
+    )
+    files=(
+      "/var/tmp/depnotify.log"
+      "/var/tmp/com.depnotify.provisioning.done"
+      "/var/tmp/com.depnotify.registration.done"
+    )
+    user_files=(
+      "%USER_HOME%/Library/Preferences/menu.nomad.DEPNotify.plist"
+      "%USER_HOME%/Library/Caches/menu.nomad.DEPNotify"
+      "%USER_HOME%/Library/Saved Application State/menu.nomad.DEPNotify.savedState"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
