@@ -1,0 +1,22 @@
+arcbrowser)
+    app_name="Arc"
+    bundle_id="company.thebrowser.Browser"
+    app_paths=(
+      "/Applications/Arc.app"
+    )
+    pkgs=()
+    files=()
+    user_files=(
+      "%USER_HOME%/Library/Preferences/company.thebrowser.Browser.plist"
+      "%USER_HOME%/Library/Caches/company.thebrowser.Browser"
+      "%USER_HOME%/Library/HTTPStorages/company.thebrowser.Browser"
+      "%USER_HOME%/Library/Saved Application State/company.thebrowser.Browser.savedState"
+      "%USER_HOME%/Library/Logs/Arc"
+      "%USER_HOME%/Library/Caches/Arc"
+      "%USER_HOME%/Library/WebKit/company.thebrowser.Browser"
+      "%USER_HOME%/Library/Preferences/company.thebrowser.Browser.helper.plist"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
