@@ -1,0 +1,20 @@
+pathways)
+    app_name="PATHWAYS"
+    bundle_id="PATHWAYS"
+    app_paths=(
+      "/Applications/PATHWAYS"
+    )
+    pkgs=(
+      "PATHWAYS"
+    )
+    files=()
+    user_files=(
+      "%USER_HOME%/Library/Application Support/PATHWAYS"
+      "%USER_HOME%/Library/Preferences/PATHWAYS.plist"
+      "%USER_HOME%/Library/Caches/PATHWAYS"
+      "%USER_HOME%/Library/Logs/PATHWAYS"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
