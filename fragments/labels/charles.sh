@@ -12,6 +12,7 @@ charles)
       "%USER_HOME%/Library/Application Support/Charles"
       "%USER_HOME%/Library/Preferences/com.xk72.Charles.plist"
       "%USER_HOME%/Library/Caches/com.xk72.Charles"
+      "%USER_HOME%/Library/Saved Application State/com.xk72.Charles.savedState"
       "%USER_HOME%/Library/Logs/Charles"
     )
     agents=()
