@@ -145,14 +145,15 @@ do_uninstall(){
   [[ "${NOTIFY:-silent}" != "silent" && "${NOTIFY:-silent}" != "none" && "${NOTIFY:-silent}" != "error" ]] \
     && displaynotification "Removing ${app_name}…" "Uninstallomator"
 
-  # Kill/quit processes (basic)
-  blockingProcesses=("${blockingProcesses[@]:-}" "${app_name}")
-  checkRunningProcesses
-
-  # unload launch items
+  # unload launch items first: bootout stops their jobs, and a KeepAlive agent or daemon would
+  # otherwise relaunch what the kill loop just quit, after the final check had passed
   local p
   for p in "${agents[@]:-}";  do [[ -n "$p" ]] && unload_launch "$p"; done
   for p in "${daemons[@]:-}"; do [[ -n "$p" ]] && unload_launch "$p"; done
+
+  # Kill/quit processes (basic)
+  blockingProcesses=("${blockingProcesses[@]:-}" "${app_name}")
+  checkRunningProcesses
 
   # remove app bundles and system files
   found=0
