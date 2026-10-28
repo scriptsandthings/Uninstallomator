@@ -1,0 +1,17 @@
+itsycal)
+    app_name="Itsycal"
+    bundle_id="com.mowglii.ItsycalApp"
+    app_paths=(
+      "/Applications/Itsycal.app"
+    )
+    pkgs=()
+    files=()
+    user_files=(
+      "%USER_HOME%/Library/Preferences/com.mowglii.ItsycalApp.plist"
+      "%USER_HOME%/Library/Caches/com.mowglii.ItsycalApp"
+      "%USER_HOME%/Library/HTTPStorages/com.mowglii.ItsycalApp"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
