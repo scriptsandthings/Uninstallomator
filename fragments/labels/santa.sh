@@ -1,0 +1,28 @@
+santa)
+    app_name="Santa"
+    bundle_id="com.northpolesec.santa"
+    app_paths=(
+      "/Applications/Santa.app"
+    )
+    pkgs=(
+      "com.northpolesec.santa"
+    )
+    files=(
+      "/usr/local/bin/santactl"
+      "/private/etc/newsyslog.d/com.northpolesec.santa.newsyslog.conf"
+      "/private/etc/asl/com.northpolesec.santa.asl.conf"
+      "/var/db/santa/migration"
+    )
+    user_files=()
+    agents=(
+      "/Library/LaunchAgents/com.northpolesec.santa.plist"
+    )
+    daemons=(
+      "/Library/LaunchDaemons/com.northpolesec.santa.bundleservice.plist"
+      "/Library/LaunchDaemons/com.northpolesec.santa.syncservice.plist"
+      "/Library/LaunchDaemons/com.northpolesec.santa.metricservice.plist"
+      "/Library/LaunchDaemons/com.northpolesec.santa-migration.plist"
+      "/Library/LaunchDaemons/com.northpolesec.santa.migration.plist"
+    )
+    profiles=()
+;;
