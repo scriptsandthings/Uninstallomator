@@ -1,0 +1,19 @@
+things)
+    app_name="Things3"
+    bundle_id="com.culturedcode.ThingsMac"
+    app_paths=(
+      "/Applications/Things3.app"
+    )
+    pkgs=()
+    files=()
+    user_files=(
+      "%USER_HOME%/Library/Logs/Things3"
+      "%USER_HOME%/Library/Preferences/com.culturedcode.ThingsMac.plist"
+      "%USER_HOME%/Library/Caches/com.culturedcode.ThingsMac"
+      "%USER_HOME%/Library/HTTPStorages/com.culturedcode.ThingsMac"
+      "%USER_HOME%/Library/Saved Application State/com.culturedcode.ThingsMac.savedState"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
