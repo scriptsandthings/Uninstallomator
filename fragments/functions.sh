@@ -89,6 +89,10 @@ checkRunningProcesses() {
 unload_launch(){
   local p="$1"
   [[ -f "$p" ]] || return 0
+  if [[ "${DEBUG:-0}" -eq 1 ]]; then
+    printlog "[DEBUG] would unload and remove: $p" DEBUG
+    return 0
+  fi
   if [[ "$p" == *"/LaunchAgents/"* ]]; then
     local cu; cu=$(get_current_user); local uid; uid=$(id -u "$cu" 2>/dev/null || echo 501)
     runAsUser launchctl bootout "gui/$uid" "$p" || true
