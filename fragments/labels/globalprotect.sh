@@ -1,0 +1,45 @@
+globalprotect)
+    app_name="GlobalProtect"
+    bundle_id="com.paloaltonetworks.GlobalProtect.client"
+    app_paths=(
+      "/Applications/GlobalProtect.app"
+      "/Applications/GlobalProtect.app.bak"
+    )
+    pkgs=(
+      "com.paloaltonetworks.globalprotect.pkg"
+      "com.paloaltonetworks.globalprotect.uninstall.pkg"
+      "com.paloaltonetworks.globalprotect.systemext.pkg"
+      "globalprotect"
+    )
+    files=(
+      "/Library/Application Support/PaloAltoNetworks/GlobalProtect"
+      "/Library/Logs/PaloAltoNetworks/GlobalProtect"
+      "/Library/Security/SecurityAgentPlugins/gplogin.bundle"
+      "/Library/Extensions/gplock.kext"
+      "/Library/Preferences/com.paloaltonetworks.GlobalProtect.settings.plist"
+      "/Library/Preferences/com.paloaltonetworks.GlobalProtect.client.plist"
+      "/Library/Preferences/com.paloaltonetworks.GlobalProtect.plist"
+      "/Library/Preferences/PanGPS.plist"
+    )
+    user_files=(
+      "%USER_HOME%/Library/Application Support/PaloAltoNetworks/GlobalProtect"
+      "%USER_HOME%/Library/Preferences/com.paloaltonetworks.GlobalProtect.client.plist"
+      "%USER_HOME%/Library/Preferences/com.paloaltonetworks.GlobalProtect.settings.plist"
+      "%USER_HOME%/Library/Preferences/com.paloaltonetworks.GlobalProtect.plist"
+      "%USER_HOME%/Library/Preferences/PanGPS.plist"
+      "%USER_HOME%/Library/Logs/PaloAltoNetworks/GlobalProtect"
+      "%USER_HOME%/Library/Group Containers/group.PXPZ95SK77.com.paloaltonetworks.GlobalProtect.client"
+    )
+    agents=(
+      "/Library/LaunchAgents/com.paloaltonetworks.gp.pangps.plist"
+      "/Library/LaunchAgents/com.paloaltonetworks.gp.pangpa.plist"
+    )
+    daemons=(
+      "/Library/LaunchDaemons/com.paloaltonetworks.gp.pangpsd.plist"
+    )
+    profiles=()
+    hook_team_id="PXPZ95SK77"
+    pre_remove=(
+      "/Applications/GlobalProtect.app/Contents/Resources/uninstall_gp.sh"
+    )
+;;
