@@ -1,0 +1,26 @@
+nudge)
+    app_name="Nudge"
+    bundle_id="com.github.macadmins.Nudge"
+    app_paths=(
+      "/Applications/Utilities/Nudge.app"
+    )
+    pkgs=(
+      "com.github.macadmins.Nudge"
+    )
+    files=(
+      "/Library/Preferences/com.github.macadmins.Nudge.plist"
+    )
+    user_files=(
+      "%USER_HOME%/Library/Preferences/com.github.macadmins.Nudge.plist"
+      "%USER_HOME%/Library/Caches/com.github.macadmins.Nudge"
+      "%USER_HOME%/Library/HTTPStorages/com.github.macadmins.Nudge"
+      "%USER_HOME%/Library/Saved Application State/com.github.macadmins.Nudge.savedState"
+    )
+    agents=(
+      "/Library/LaunchAgents/com.github.macadmins.Nudge.plist"
+    )
+    daemons=(
+      "/Library/LaunchDaemons/com.github.macadmins.Nudge.logger.plist"
+    )
+    profiles=()
+;;
