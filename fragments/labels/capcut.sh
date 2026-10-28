@@ -1,0 +1,19 @@
+capcut)
+    app_name="CapCut"
+    bundle_id="com.lemon.lvoverseas"
+    app_paths=(
+      "/Applications/CapCut.app"
+    )
+    pkgs=()
+    files=()
+    user_files=(
+      "%USER_HOME%/Library/Preferences/com.lemon.lvoverseas.plist"
+      "%USER_HOME%/Library/Caches/com.lemon.lvoverseas"
+      "%USER_HOME%/Library/HTTPStorages/com.lemon.lvoverseas"
+      "%USER_HOME%/Library/Saved Application State/com.lemon.lvoverseas.savedState"
+      "%USER_HOME%/Library/Logs/CapCut"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
