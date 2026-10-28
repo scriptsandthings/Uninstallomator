@@ -136,6 +136,16 @@ list_user_homes(){
       END { out() }' \
   | sort -u | grep -E '^[0-9]+ /Users/[^/]+' | grep -vE '^[0-9]+ /Users/(Shared|Guest)$'
 }
+# console_user_home: prints "UID HOME" for the console user, with HOME read from the account record
+# rather than assumed to be /Users/NAME, or nothing when nobody is logged in.
+console_user_home(){
+  local cu uid home
+  cu="$(get_current_user)"
+  [[ -z "$cu" || "$cu" == "loginwindow" ]] && return 0
+  uid="$(id -u "$cu" 2>/dev/null)"
+  home="$(dscl /Search -read "/Users/$cu" NFSHomeDirectory 2>/dev/null | awk '/^NFSHomeDirectory:/ { print $2; exit }')"
+  [[ -n "$uid" && -n "$home" ]] && print -r -- "$uid $home"
+}
 expand_user_path(){
   local tpl="$1" home="$2"
   # Escape the %: in zsh a pattern starting with % is anchored to the end of the string,
@@ -251,28 +261,19 @@ do_uninstall(){
   # The user homes and their owners are read once, here, for every per-user entry.
   local -a ap_paths ap_homes ap_uids uh_homes uh_uids
   local ap ap_home ap_cu i k
-  if [[ "${USERSCOPE:-0}" -eq 1 ]]; then
-    while read -r ap_cu ap_home; do
-      uh_uids+=( "$ap_cu" ); uh_homes+=( "$ap_home" )
-    done < <(list_user_homes)
-  fi
+  while read -r ap_cu ap_home; do
+    uh_uids+=( "$ap_cu" ); uh_homes+=( "$ap_home" )
+  done < <(if [[ "${USERSCOPE:-0}" -eq 1 ]]; then list_user_homes; else console_user_home; fi)
   for ap in "${app_paths[@]}"; do
     [[ -z "$ap" ]] && continue
     if [[ "$ap" != *%USER_HOME%* ]]; then
       ap_paths+=( "$ap" ); ap_homes+=( "" ); ap_uids+=( "" )
       continue
     fi
-    if [[ "${USERSCOPE:-0}" -eq 1 ]]; then
-      for (( k = 1; k <= ${#uh_homes[@]}; k++ )); do
-        ap_paths+=( "$(expand_user_path "$ap" "${uh_homes[$k]}")" ); ap_homes+=( "${uh_homes[$k]}" )
-        ap_uids+=( "${uh_uids[$k]}" )
-      done
-    else
-      ap_cu="$(get_current_user)"
-      [[ "$ap_cu" == "loginwindow" || -z "$ap_cu" ]] && continue
-      ap_paths+=( "$(expand_user_path "$ap" "/Users/$ap_cu")" ); ap_homes+=( "/Users/$ap_cu" )
-      ap_uids+=( "$(id -u "$ap_cu" 2>/dev/null)" )
-    fi
+    for (( k = 1; k <= ${#uh_homes[@]}; k++ )); do
+      ap_paths+=( "$(expand_user_path "$ap" "${uh_homes[$k]}")" ); ap_homes+=( "${uh_homes[$k]}" )
+      ap_uids+=( "${uh_uids[$k]}" )
+    done
   done
 
   # remove app bundles and system files
@@ -303,12 +304,11 @@ do_uninstall(){
       done
     done
   else
-    local cu_name; cu_name="$(get_current_user)"
-   if [[ "$cu_name" == "loginwindow" || -z "$cu_name" ]]; then
-     printlog "No user session; skipping per-user file removals (USERSCOPE=0)" INFO
+   if (( ${#uh_homes[@]} == 0 )); then
+     printlog "No user session (or no home found for it); skipping per-user file removals (USERSCOPE=0)" INFO
    else
-     local cu_home="/Users/$cu_name" tgt
-     local cu_uid; cu_uid="$(id -u "$cu_name" 2>/dev/null)"
+     local cu_home="${uh_homes[1]}" tgt
+     local cu_uid="${uh_uids[1]}"
     for p in "${user_files[@]:-}"; do
       [[ -z "$p" ]] && continue
       if [[ "$p" == %USER_HOME%* ]]; then
