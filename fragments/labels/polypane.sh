@@ -1,0 +1,21 @@
+polypane)
+    app_name="Polypane"
+    bundle_id="com.firstversionist.polypane"
+    app_paths=(
+      "/Applications/Polypane.app"
+    )
+    pkgs=()
+    files=()
+    user_files=(
+      "%USER_HOME%/Library/Preferences/com.firstversionist.polypane.plist"
+      "%USER_HOME%/Library/Caches/com.firstversionist.polypane"
+      "%USER_HOME%/Library/Logs/Polypane"
+      "%USER_HOME%/Library/HTTPStorages/com.firstversionist.polypane"
+      "%USER_HOME%/Library/Saved Application State/com.firstversionist.polypane.savedState"
+      "%USER_HOME%/Library/WebKit/com.firstversionist.polypane"
+      "%USER_HOME%/Library/Caches/com.firstversionist.polypane.ShipIt"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
