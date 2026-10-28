@@ -7,14 +7,14 @@ screenflow)
     pkgs=()
     files=()
     user_files=(
-      "%USER_HOME%/Library/Application Support/ScreenFlow"
       "%USER_HOME%/Library/Preferences/net.telestream.screenflow10.plist"
+      "%USER_HOME%/Library/Preferences/WSG985FR47.net.telestream.screenflowhelper.plist"
       "%USER_HOME%/Library/Caches/net.telestream.screenflow10"
+      "%USER_HOME%/Library/HTTPStorages/net.telestream.screenflow10"
+      "%USER_HOME%/Library/Saved Application State/net.telestream.screenflow10.savedState"
       "%USER_HOME%/Library/Logs/ScreenFlow"
     )
     agents=()
-    daemons=(
-      "/Library/LaunchDaemons/net.telestream.LicensingHelper.plist"
-    )
+    daemons=()
     profiles=()
 ;;
