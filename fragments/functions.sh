@@ -199,6 +199,12 @@ do_uninstall(){
   local any_left=0
   for p in "${app_paths[@]}"; do [[ -e "$p" ]] && any_left=1; done
 
+  # A DEBUG run removes nothing, so the bundles are always still there. Without this the dry run
+  # ended with exit 1 "Some app bundles still present" even when a real run would have worked.
+  if [[ "${DEBUG:-0}" -eq 1 ]]; then
+    printlog "DEBUG: dry run for ${app_name} finished; nothing was removed" REQ
+    return 0
+  fi
   if (( any_left == 0 )); then
     [[ "${NOTIFY:-silent}" == "success" || "${NOTIFY:-silent}" == "all" ]] \
       && displaynotification "${app_name} removed." "Uninstall complete"
