@@ -131,7 +131,9 @@ list_user_homes(){
 }
 expand_user_path(){
   local tpl="$1" home="$2"
-  printf '%s' "${tpl//%USER_HOME%/$home}"
+  # Escape the %: in zsh a pattern starting with % is anchored to the end of the string,
+  # so an unescaped %USER_HOME% never matches and no per-user file is removed.
+  printf '%s' "${tpl//\%USER_HOME\%/$home}"
 }
 
 # killTree SIGNAL PID: signals PID's child processes first, then PID itself, so a command that
