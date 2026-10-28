@@ -1,0 +1,21 @@
+platypus)
+    app_name="Platypus"
+    bundle_id="org.sveinbjorn.Platypus"
+    app_paths=(
+      "/Applications/Platypus.app"
+    )
+    pkgs=()
+    files=(
+      "/usr/local/bin/platypus"
+      "/usr/local/share/platypus"
+      "/usr/local/share/man/man1/platypus.1.gz"
+    )
+    user_files=(
+      "%USER_HOME%/Library/Preferences/org.sveinbjorn.Platypus.plist"
+      "%USER_HOME%/Library/Caches/org.sveinbjorn.Platypus"
+      "%USER_HOME%/Library/Saved Application State/org.sveinbjorn.Platypus.savedState"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
