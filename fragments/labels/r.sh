@@ -1,0 +1,30 @@
+r)
+    app_name="R"
+    bundle_id="org.R-project.R"
+    app_paths=(
+      "/Applications/R.app"
+      "/Library/Frameworks/R.framework"
+    )
+    pkgs=(
+      "org.R-project.R.GUI.pkg"
+      "org.R-project.R.fw.pkg"
+      "org.R-project.arm64.R.GUI.pkg"
+      "org.R-project.arm64.R.fw.pkg"
+      "org.r-project.arm64.tcltk"
+      "org.r-project.arm64.texinfo"
+    )
+    files=(
+      "/opt/R"
+      "/usr/local/bin/R"
+      "/usr/local/bin/Rscript"
+    )
+    user_files=(
+      "%USER_HOME%/Library/R"
+      "%USER_HOME%/Library/Preferences/org.R-project.R.plist"
+      "%USER_HOME%/Library/Caches/org.R-project.R"
+      "%USER_HOME%/Library/Saved Application State/org.R-project.R.savedState"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
