@@ -1,0 +1,19 @@
+clipy)
+    app_name="Clipy"
+    bundle_id="com.clipy-app.Clipy"
+    app_paths=(
+      "/Applications/Clipy.app"
+    )
+    pkgs=()
+    files=()
+    user_files=(
+      "%USER_HOME%/Library/Preferences/com.clipy-app.Clipy.plist"
+      "%USER_HOME%/Library/Caches/com.clipy-app.Clipy"
+      "%USER_HOME%/Library/HTTPStorages/com.clipy-app.Clipy"
+      "%USER_HOME%/Library/Saved Application State/com.clipy-app.Clipy.savedState"
+      "%USER_HOME%/Library/Logs/Clipy"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
