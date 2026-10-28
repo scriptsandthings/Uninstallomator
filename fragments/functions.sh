@@ -124,9 +124,16 @@ forget_pkg(){
 }
 
 # --- Userscope helpers ---
+# list_user_homes: prints the home folder of each account with a uid of 500 or more. Reads whole
+# records, so the order dscl prints the two keys in does not matter.
 list_user_homes(){
   dscl . -readall /Users NFSHomeDirectory UniqueID 2>/dev/null \
-  | awk '/^NFSHomeDirectory:/{h=$2} /^UniqueID:/{uid=$2; if (uid>=500) print h}' \
+  | awk '
+      function out() { if (h != "" && u != "" && u >= 500) print h; h = ""; u = "" }
+      /^-$/ { out(); next }
+      /^NFSHomeDirectory:/ { h = $2 }
+      /^UniqueID:/ { u = $2 }
+      END { out() }' \
   | sort -u | grep -E '^/Users/[^/]+' | grep -vE '^/Users/(Shared|Guest)$'
 }
 expand_user_path(){
