@@ -1,0 +1,19 @@
+netnewswire)
+    app_name="NetNewsWire"
+    bundle_id="com.ranchero.NetNewsWire-Evergreen"
+    app_paths=(
+      "/Applications/NetNewsWire.app"
+    )
+    pkgs=()
+    files=()
+    user_files=(
+      "%USER_HOME%/Library/Preferences/com.ranchero.NetNewsWire-Evergreen.plist"
+      "%USER_HOME%/Library/Caches/com.ranchero.NetNewsWire-Evergreen"
+      "%USER_HOME%/Library/Saved Application State/com.ranchero.NetNewsWire-Evergreen.savedState"
+      "%USER_HOME%/Library/Containers/com.ranchero.NetNewsWire-Evergreen.Mac.ShareExtension"
+      "%USER_HOME%/Library/Containers/com.ranchero.NetNewsWire-Evergreen.SubscribeToFeed"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
