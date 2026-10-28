@@ -1,0 +1,19 @@
+cytoscape)
+    app_name="Cytoscape"
+    bundle_id="com.install4j.5211-3645-3154-2580.3"
+    app_paths=(
+      "/Applications/Cytoscape_v3.9.1/Cytoscape.app"
+      "/Applications/Cytoscape_v3.9.1"
+      "/Applications/Cytoscape_v3.10.5"
+    )
+    pkgs=()
+    files=()
+    user_files=(
+      "%USER_HOME%/CytoscapeConfiguration"
+      "%USER_HOME%/Library/Preferences/com.install4j.5211-3645-3154-2580.3.plist"
+      "%USER_HOME%/Library/Saved Application State/com.install4j.5211-3645-3154-2580.3.savedState"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
