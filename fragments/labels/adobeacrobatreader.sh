@@ -4,21 +4,25 @@ adobeacrobatreader)
     app_paths=(
       "/Applications/Adobe Acrobat Reader.app"
     )
+    blockingProcesses=(
+      "AdobeReader"
+    )
     pkgs=(
       "com.adobe.acrobat.DC.reader.app.pkg.MUI"
-      "com.adobe.armdc.app.pkg"
       "com.adobe.acrobat.DC.reader.appsupport.pkg.MUI"
+      "com.adobe.acrobat.DC.reader.acropython3.pkg.MUI"
+      "com.adobe.RdrServicesUpdater"
+      "com.adobe.acrobat.DC.reader.entryPackage.pkg.MUI"
+      "com.adobe.acrobat.DC.reader.exitPackage.pkg.MUI"
     )
     files=(
-      "/Library/Application Support/adobe/Reader"
-      "/Library/Application Support/adobe/Reader/DC"
-      "/Library/Application Support/adobe/WebExtnUtils/DC_Reader"
+      "/Library/Application Support/Adobe/Reader"
+      "/Library/Application Support/Adobe/WebExtnUtils/DC_Reader"
     )
     user_files=(
-      "%USER_HOME%/Library/Application Support/Acrobat Reader"
       "%USER_HOME%/Library/Preferences/com.adobe.Reader.plist"
       "%USER_HOME%/Library/Caches/com.adobe.Reader"
-      "%USER_HOME%/Library/Logs/Acrobat Reader"
+      "%USER_HOME%/Library/Saved Application State/com.adobe.Reader.savedState"
     )
     agents=()
     daemons=()
