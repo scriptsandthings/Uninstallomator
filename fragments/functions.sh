@@ -134,6 +134,97 @@ expand_user_path(){
   printf '%s' "${tpl//%USER_HOME%/$home}"
 }
 
+# killTree SIGNAL PID: signals PID's child processes first, then PID itself, so a command that
+# runs through sudo or a shell does not leave its child running when it is stopped.
+killTree(){
+  local child
+  for child in $(pgrep -P "$2" 2>/dev/null); do killTree "$1" "$child"; done
+  kill -"$1" "$2" 2>/dev/null || true
+}
+
+# home_uid HOME: prints the UniqueID of the account whose NFSHomeDirectory is HOME, or nothing.
+# Reads whole records, so the order dscl prints the two keys in does not matter.
+home_uid(){
+  dscl . -readall /Users NFSHomeDirectory UniqueID 2>/dev/null \
+  | awk -v want="$1" '
+      /^-$/ { if (h == want && u != "") { print u; exit } h = ""; u = ""; next }
+      /^NFSHomeDirectory:/ { h = $2 }
+      /^UniqueID:/ { u = $2 }
+      END { if (h == want && u != "") print u }' | head -n 1
+}
+
+# user_rm UID HOME PATH
+# Removes PATH, a per-user file inside the home folder HOME of the account with uid UID. This
+# script runs as root, and the user owns the folders in their home, so the user can replace a
+# folder on the way (for example ~/Library/Application Support/App) with a link to a system
+# folder; a plain rm -rf as root would then delete what sits behind the link. So before anything
+# is removed:
+#   - HOME must belong to UID, and UID must not be 0: the rm never runs as root;
+#   - PATH must be written inside HOME, with no "." or ".." in it;
+#   - no folder between HOME and PATH may be a link;
+#   - the folder holding PATH, with links resolved, must still be inside HOME.
+# The rm then runs as the owner of HOME, so a folder swapped after these checks can only lead to
+# files that user could delete anyway. A file in the home that the user cannot delete (owned by
+# root, for example) is left in place and logged. PATH itself may be a link: rm removes the link,
+# not what it points to.
+# The rm runs in the background with no input and is stopped after USER_RM_TIMEOUT seconds (60),
+# so a hung network home or a stuck file system cannot hold up the policy.
+user_rm(){
+  local uid="$1" home="${2%/}" t="$3" rhome rparent owner ouid part p rest pid t0
+  local limit="${USER_RM_TIMEOUT:-60}"
+  [[ "$limit" == <-> && "$limit" -gt 0 ]] || limit=60
+  [[ -e "$t" || -L "$t" ]] || return 0
+  ouid="$(stat -f %u "$home" 2>/dev/null)"
+  owner="$(stat -f %Su "$home" 2>/dev/null)"
+  if [[ -z "$uid" || -z "$ouid" || -z "$owner" || "$ouid" != "$uid" || "$ouid" == 0 ]]; then
+    printlog "skipped, home not owned by its user: $t ($home belongs to uid ${ouid:-unknown}, account uid ${uid:-unknown})" WARN
+    return 0
+  fi
+  if [[ "$t" != "$home"/?* || "$t/" == */./* || "$t/" == */../* ]]; then
+    printlog "skipped, path leaves the home folder: $t" WARN
+    return 0
+  fi
+  rest="${${t:h}#$home}"
+  p="$home"
+  for part in "${(@s:/:)rest}"; do
+    [[ -z "$part" ]] && continue
+    p="$p/$part"
+    if [[ -L "$p" ]]; then
+      printlog "skipped, path leaves the home folder: $t ($p is a link)" WARN
+      return 0
+    fi
+  done
+  rhome="$(cd -P -- "$home" 2>/dev/null && pwd -P)"
+  rparent="$(cd -P -- "${t:h}" 2>/dev/null && pwd -P)"
+  if [[ -z "$rhome" || -z "$rparent" ]] || [[ "$rparent" != "$rhome" && "$rparent" != "$rhome"/* ]]; then
+    printlog "skipped, path leaves the home folder: $t (its folder is ${rparent:-unreadable})" WARN
+    return 0
+  fi
+  if [[ "${DEBUG:-0}" -eq 1 ]]; then
+    printlog "[DEBUG] would remove as $owner: $t" DEBUG
+    return 0
+  fi
+  printlog "Removing as $owner: $t" INFO
+  /usr/bin/sudo -n -u "#$uid" /bin/rm -rf -- "$t" </dev/null &
+  pid=$!
+  t0=$SECONDS
+  while kill -0 "$pid" 2>/dev/null; do
+    if (( SECONDS - t0 >= limit )); then
+      killTree TERM "$pid"
+      sleep 2
+      killTree KILL "$pid"
+      wait "$pid" 2>/dev/null
+      printlog "timed out, left in place: $t (rm as $owner still running after ${limit}s, stopped)" WARN
+      return 0
+    fi
+    sleep 0.2
+  done
+  wait "$pid" 2>/dev/null
+  if [[ -e "$t" || -L "$t" ]]; then
+    printlog "$owner cannot remove all of $t (owned by another user, or locked); left in place" WARN
+  fi
+}
+
 # --- Uninstall engine (runs after label case sets arrays) ---
 do_uninstall(){
   # sanity for arrays
@@ -163,12 +254,14 @@ do_uninstall(){
 
   # per-user files
   if [[ "${USERSCOPE:-0}" -eq 1 ]]; then
-    local uh tgt
+    local uh tgt uhuid
     while IFS= read -r uh; do
+      uhuid="$(home_uid "$uh")"
       for p in "${user_files[@]:-}"; do
         [[ -z "$p" ]] && continue
         tgt="$(expand_user_path "$p" "$uh")"
-        [[ -n "$tgt" ]] && confirm_rm "$tgt"
+        # A path in the home folder is removed as its owner, after the checks in user_rm.
+        if [[ "$tgt" == "$uh"/* ]]; then user_rm "$uhuid" "$uh" "$tgt"; elif [[ -n "$tgt" ]]; then confirm_rm "$tgt"; fi
       done
     done < <(list_user_homes)
   else
@@ -177,6 +270,7 @@ do_uninstall(){
      printlog "No user session; skipping per-user file removals (USERSCOPE=0)" INFO
    else
      local cu_home="/Users/$cu_name" tgt
+     local cu_uid; cu_uid="$(id -u "$cu_name" 2>/dev/null)"
     for p in "${user_files[@]:-}"; do
       [[ -z "$p" ]] && continue
       if [[ "$p" == %USER_HOME%* ]]; then
@@ -186,7 +280,8 @@ do_uninstall(){
       else
         tgt="$p"
       fi
-      [[ -n "$tgt" ]] && confirm_rm "$tgt"
+      # A path in the home folder is removed as its owner, after the checks in user_rm.
+      if [[ "$tgt" == "$cu_home"/* ]]; then user_rm "$cu_uid" "$cu_home" "$tgt"; elif [[ -n "$tgt" ]]; then confirm_rm "$tgt"; fi
     done
    fi
   fi
