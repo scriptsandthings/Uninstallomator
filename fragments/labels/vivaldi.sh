@@ -1,0 +1,20 @@
+vivaldi)
+    app_name="Vivaldi"
+    bundle_id="com.vivaldi.Vivaldi"
+    app_paths=(
+      "/Applications/Vivaldi.app"
+    )
+    pkgs=()
+    files=()
+    user_files=(
+      "%USER_HOME%/Library/Logs/Vivaldi"
+      "%USER_HOME%/Library/Preferences/com.vivaldi.Vivaldi.plist"
+      "%USER_HOME%/Library/Caches/com.vivaldi.Vivaldi"
+      "%USER_HOME%/Library/HTTPStorages/com.vivaldi.Vivaldi"
+      "%USER_HOME%/Library/Saved Application State/com.vivaldi.Vivaldi.savedState"
+      "%USER_HOME%/Library/Caches/Vivaldi"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
