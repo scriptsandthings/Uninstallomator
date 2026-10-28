@@ -146,6 +146,18 @@ console_user_home(){
   home="$(dscl /Search -read "/Users/$cu" NFSHomeDirectory 2>/dev/null | awk '/^NFSHomeDirectory:/ { print $2; exit }')"
   [[ -n "$uid" && -n "$home" ]] && print -r -- "$uid $home"
 }
+# user_path_template PATH: prints PATH with a leading ~/ written as %USER_HOME%/, so it is removed
+# from the user's home as its owner. A label that leaves ~ unquoted gets it expanded to root's
+# home ($HOME) when the label is read, so a leading $HOME/ is treated the same way.
+user_path_template(){
+  local p="$1"
+  if [[ "$p" == \~/* ]]; then
+    p="%USER_HOME%/${p:2}"
+  elif [[ -n "$HOME" && "$HOME" != / && "$p" == "$HOME"/* ]]; then
+    p="%USER_HOME%/${p#"$HOME"/}"
+  fi
+  printf '%s' "$p"
+}
 expand_user_path(){
   local tpl="$1" home="$2"
   # Escape the %: in zsh a pattern starting with % is anchored to the end of the string,
@@ -266,6 +278,7 @@ do_uninstall(){
   done < <(if [[ "${USERSCOPE:-0}" -eq 1 ]]; then list_user_homes; else console_user_home; fi)
   for ap in "${app_paths[@]}"; do
     [[ -z "$ap" ]] && continue
+    ap="$(user_path_template "$ap")"
     if [[ "$ap" != *%USER_HOME%* ]]; then
       ap_paths+=( "$ap" ); ap_homes+=( "" ); ap_uids+=( "" )
       continue
@@ -291,38 +304,21 @@ do_uninstall(){
   done
   for p in "${files[@]:-}";   do [[ -n "$p" ]] && confirm_rm "$p"; done
 
-  # per-user files
-  if [[ "${USERSCOPE:-0}" -eq 1 ]]; then
-    local uh tgt uhuid
-    for (( k = 1; k <= ${#uh_homes[@]}; k++ )); do
-      uh="${uh_homes[$k]}"; uhuid="${uh_uids[$k]}"
-      for p in "${user_files[@]:-}"; do
-        [[ -z "$p" ]] && continue
-        tgt="$(expand_user_path "$p" "$uh")"
-        # A path in the home folder is removed as its owner, after the checks in user_rm.
-        if [[ "$tgt" == "$uh"/* ]]; then user_rm "$uhuid" "$uh" "$tgt"; elif [[ -n "$tgt" ]]; then confirm_rm "$tgt"; fi
-      done
-    done
-  else
-   if (( ${#uh_homes[@]} == 0 )); then
-     printlog "No user session (or no home found for it); skipping per-user file removals (USERSCOPE=0)" INFO
-   else
-     local cu_home="${uh_homes[1]}" tgt
-     local cu_uid="${uh_uids[1]}"
-    for p in "${user_files[@]:-}"; do
-      [[ -z "$p" ]] && continue
-      if [[ "$p" == %USER_HOME%* ]]; then
-        tgt="$(expand_user_path "$p" "$cu_home")"
-      elif [[ "$p" == ~/* ]]; then
-        tgt="${p/#~\//$cu_home/}"
-      else
-        tgt="$p"
-      fi
-      # A path in the home folder is removed as its owner, after the checks in user_rm.
-      if [[ "$tgt" == "$cu_home"/* ]]; then user_rm "$cu_uid" "$cu_home" "$tgt"; elif [[ -n "$tgt" ]]; then confirm_rm "$tgt"; fi
-    done
-   fi
+  # per-user files, for every user home when USERSCOPE=1, or for the console user otherwise
+  if [[ "${USERSCOPE:-0}" -ne 1 ]] && (( ${#uh_homes[@]} == 0 )); then
+    printlog "No user session (or no home found for it); skipping per-user file removals (USERSCOPE=0)" INFO
   fi
+  local -a uf_tpls
+  local uh tgt uhuid
+  for p in "${user_files[@]:-}"; do [[ -n "$p" ]] && uf_tpls+=( "$(user_path_template "$p")" ); done
+  for (( k = 1; k <= ${#uh_homes[@]}; k++ )); do
+    uh="${uh_homes[$k]}"; uhuid="${uh_uids[$k]}"
+    for p in "${uf_tpls[@]}"; do
+      tgt="$(expand_user_path "$p" "$uh")"
+      # A path in the home folder is removed as its owner, after the checks in user_rm.
+      if [[ "$tgt" == "$uh"/* ]]; then user_rm "$uhuid" "$uh" "$tgt"; elif [[ -n "$tgt" ]]; then confirm_rm "$tgt"; fi
+    done
+  done
 
   # receipts
   local id
