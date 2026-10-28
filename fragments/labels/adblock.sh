@@ -1,0 +1,17 @@
+adblock)
+    app_name="AdBlock"
+    bundle_id="com.betafish.adblock-mac"
+    app_paths=(
+      "/Applications/AdBlock.app"
+    )
+    pkgs=()
+    files=()
+    user_files=(
+      "%USER_HOME%/Library/Containers/com.betafish.adblock-mac"
+      "%USER_HOME%/Library/Containers/com.betafish.adblock-mac.AdBlock-Safari-Extension"
+      "%USER_HOME%/Library/Preferences/com.betafish.adblock-mac.plist"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
