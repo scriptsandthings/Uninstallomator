@@ -1,0 +1,19 @@
+bettersnaptool)
+    app_name="BetterSnapTool"
+    bundle_id="com.hegenberg.BetterSnapTool"
+    app_paths=(
+      "/Applications/BetterSnapTool.app"
+    )
+    pkgs=(
+      "com.hegenberg.BetterSnapTool"
+    )
+    files=()
+    user_files=(
+      "%USER_HOME%/Library/Containers/com.hegenberg.BetterSnapTool"
+      "%USER_HOME%/Library/Application Scripts/com.hegenberg.BetterSnapTool"
+      "%USER_HOME%/Library/Preferences/com.hegenberg.BetterSnapTool.plist"
+    )
+    agents=()
+    daemons=()
+    profiles=()
+;;
