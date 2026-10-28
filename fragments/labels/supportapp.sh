@@ -1,0 +1,26 @@
+supportapp)
+    app_name="Support"
+    bundle_id="nl.root3.support"
+    app_paths=(
+      "/Applications/Support.app"
+    )
+    pkgs=(
+      "nl.root3.support"
+    )
+    files=(
+      "/Library/PrivilegedHelperTools/nl.root3.support.helper"
+    )
+    user_files=(
+      "%USER_HOME%/Library/Application Support/Support"
+      "%USER_HOME%/Library/Preferences/nl.root3.support.plist"
+      "%USER_HOME%/Library/Caches/nl.root3.support"
+      "%USER_HOME%/Library/Logs/Support"
+    )
+    agents=(
+      "/Library/LaunchAgents/nl.root3.support.plist"
+    )
+    daemons=(
+      "/Library/LaunchDaemons/nl.root3.support.helper.plist"
+    )
+    profiles=()
+;;
