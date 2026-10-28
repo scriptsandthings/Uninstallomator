@@ -124,17 +124,17 @@ forget_pkg(){
 }
 
 # --- Userscope helpers ---
-# list_user_homes: prints the home folder of each account with a uid of 500 or more. Reads whole
-# records, so the order dscl prints the two keys in does not matter.
+# list_user_homes: prints "UID HOME" for each account with a uid of 500 or more and a home folder
+# in /Users. Reads whole records, so the order dscl prints the two keys in does not matter.
 list_user_homes(){
   dscl . -readall /Users NFSHomeDirectory UniqueID 2>/dev/null \
   | awk '
-      function out() { if (h != "" && u != "" && u >= 500) print h; h = ""; u = "" }
+      function out() { if (h != "" && u != "" && u >= 500) print u " " h; h = ""; u = "" }
       /^-$/ { out(); next }
       /^NFSHomeDirectory:/ { h = $2 }
       /^UniqueID:/ { u = $2 }
       END { out() }' \
-  | sort -u | grep -E '^/Users/[^/]+' | grep -vE '^/Users/(Shared|Guest)$'
+  | sort -u | grep -E '^[0-9]+ /Users/[^/]+' | grep -vE '^[0-9]+ /Users/(Shared|Guest)$'
 }
 expand_user_path(){
   local tpl="$1" home="$2"
@@ -149,17 +149,6 @@ killTree(){
   local child
   for child in $(pgrep -P "$2" 2>/dev/null); do killTree "$1" "$child"; done
   kill -"$1" "$2" 2>/dev/null || true
-}
-
-# home_uid HOME: prints the UniqueID of the account whose NFSHomeDirectory is HOME, or nothing.
-# Reads whole records, so the order dscl prints the two keys in does not matter.
-home_uid(){
-  dscl . -readall /Users NFSHomeDirectory UniqueID 2>/dev/null \
-  | awk -v want="$1" '
-      /^-$/ { if (h == want && u != "") { print u; exit } h = ""; u = ""; next }
-      /^NFSHomeDirectory:/ { h = $2 }
-      /^UniqueID:/ { u = $2 }
-      END { if (h == want && u != "") print u }' | head -n 1
 }
 
 # user_rm UID HOME PATH
@@ -259,8 +248,14 @@ do_uninstall(){
   # USERSCOPE=1, or for the console user otherwise; with nobody logged in it is dropped.
   # ap_homes and ap_uids hold the home and its owner for each expanded entry (empty otherwise),
   # so that copy is removed as its owner through user_rm.
-  local -a ap_paths ap_homes ap_uids
-  local ap ap_home ap_cu i
+  # The user homes and their owners are read once, here, for every per-user entry.
+  local -a ap_paths ap_homes ap_uids uh_homes uh_uids
+  local ap ap_home ap_cu i k
+  if [[ "${USERSCOPE:-0}" -eq 1 ]]; then
+    while read -r ap_cu ap_home; do
+      uh_uids+=( "$ap_cu" ); uh_homes+=( "$ap_home" )
+    done < <(list_user_homes)
+  fi
   for ap in "${app_paths[@]}"; do
     [[ -z "$ap" ]] && continue
     if [[ "$ap" != *%USER_HOME%* ]]; then
@@ -268,10 +263,10 @@ do_uninstall(){
       continue
     fi
     if [[ "${USERSCOPE:-0}" -eq 1 ]]; then
-      while IFS= read -r ap_home; do
-        ap_paths+=( "$(expand_user_path "$ap" "$ap_home")" ); ap_homes+=( "$ap_home" )
-        ap_uids+=( "$(home_uid "$ap_home")" )
-      done < <(list_user_homes)
+      for (( k = 1; k <= ${#uh_homes[@]}; k++ )); do
+        ap_paths+=( "$(expand_user_path "$ap" "${uh_homes[$k]}")" ); ap_homes+=( "${uh_homes[$k]}" )
+        ap_uids+=( "${uh_uids[$k]}" )
+      done
     else
       ap_cu="$(get_current_user)"
       [[ "$ap_cu" == "loginwindow" || -z "$ap_cu" ]] && continue
@@ -298,15 +293,15 @@ do_uninstall(){
   # per-user files
   if [[ "${USERSCOPE:-0}" -eq 1 ]]; then
     local uh tgt uhuid
-    while IFS= read -r uh; do
-      uhuid="$(home_uid "$uh")"
+    for (( k = 1; k <= ${#uh_homes[@]}; k++ )); do
+      uh="${uh_homes[$k]}"; uhuid="${uh_uids[$k]}"
       for p in "${user_files[@]:-}"; do
         [[ -z "$p" ]] && continue
         tgt="$(expand_user_path "$p" "$uh")"
         # A path in the home folder is removed as its owner, after the checks in user_rm.
         if [[ "$tgt" == "$uh"/* ]]; then user_rm "$uhuid" "$uh" "$tgt"; elif [[ -n "$tgt" ]]; then confirm_rm "$tgt"; fi
       done
-    done < <(list_user_homes)
+    done
   else
     local cu_name; cu_name="$(get_current_user)"
    if [[ "$cu_name" == "loginwindow" || -z "$cu_name" ]]; then
