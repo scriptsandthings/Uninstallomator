@@ -7,7 +7,6 @@ macwhisper)
     pkgs=()
     files=()
     user_files=(
-      "%USER_HOME%/Library/Application Support/MacWhisper"
       "%USER_HOME%/Library/Preferences/com.goodsnooze.MacWhisper.plist"
       "%USER_HOME%/Library/Caches/com.goodsnooze.MacWhisper"
       "%USER_HOME%/Library/Logs/MacWhisper"
