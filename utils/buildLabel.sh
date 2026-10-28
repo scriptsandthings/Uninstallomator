@@ -12,7 +12,6 @@
 # Label examples: microsoftedge, googlechrome, slack, spotify
 #
 
-set -euo pipefail
 setopt NULL_GLOB
 
 # --- defaults ---
@@ -256,12 +255,18 @@ SNIPPET
 }
 
 label_file="$out_dir/${label_guess}.sh"
-mkdir -p "$out_dir"
+if (( no_write == 0 )) && ! mkdir -p "$out_dir"; then
+  print -u2 -- "Cannot create $out_dir"
+  exit 1
+fi
 
 # STDOUT
 snippet
 # Write file (unless --no-write)
 if (( no_write == 0 )); then
-  snippet > "$label_file"
+  if ! snippet > "$label_file"; then
+    print -u2 -- "Cannot write ${label_file}"
+    exit 1
+  fi
   print -u2 -- "# Wrote fragment: ${label_file}"
 fi
